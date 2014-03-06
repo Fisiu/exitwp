@@ -14,9 +14,9 @@ from urllib import urlretrieve
 from html2text import html2text_file
 
 '''
-exitwp - Wordpress xml exports to Jekykll blog format conversion
+exitwp - Wordpress xml exports to jbake blog format conversion
 
-Tested with Wordpress 3.3.1 and jekyll 0.11.2
+Tested with Wordpress 3.8.1 and jbake 2.2.1
 
 '''
 ######################################################
@@ -179,7 +179,7 @@ def write_jekyll(data, target_format):
     item_uids = {}
     attachments = {}
 
-    def get_blog_path(data, path_infix='jekyll'):
+    def get_blog_path(data, path_infix='jbake'):
         name = data['header']['link']
         name = re.sub('^https?', '', name)
         name = re.sub('[^A-Za-z0-9_.-]', '', name)
