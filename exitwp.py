@@ -285,24 +285,22 @@ def write_jekyll(data, target_format):
         sys.stdout.flush()
         out = None
         yaml_header = {
-            'title': i['title'],
-            'author': i['author'],
+            'title':i['title'],
             'date': datetime.strptime(
                 i['date'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=UTC()),
-            'slug': i['slug'],
-            'wordpress_id': int(i['wp_id']),
-            'comments': i['comments'],
         }
         if len(i['excerpt']) > 0:
             yaml_header['excerpt'] = i['excerpt']
         if i['status'] != u'publish':
-            yaml_header['published'] = False
+            yaml_header['status'] = 'draft'
+        else:
+            yaml_header['status'] = 'published'
 
         if i['type'] == 'post':
             i['uid'] = get_item_uid(i, date_prefix=True)
             fn = get_item_path(i, dir='_posts')
             out = open_file(fn)
-            yaml_header['layout'] = 'post'
+            yaml_header['type'] = 'post'
         elif i['type'] == 'page':
             i['uid'] = get_item_uid(i)
             # Chase down parent path, if any
@@ -317,7 +315,7 @@ def write_jekyll(data, target_format):
                     break
             fn = get_item_path(i, parentpath)
             out = open_file(fn)
-            yaml_header['layout'] = 'page'
+            yaml_header['type'] = 'page'
         elif i['type'] in item_type_filter:
             pass
         else:
@@ -335,8 +333,14 @@ def write_jekyll(data, target_format):
 
         if out is not None:
             def toyaml(data):
-                return yaml.safe_dump(data, allow_unicode=True,
+                obj = yaml.safe_dump(data, allow_unicode=True,
                                       default_flow_style=False).decode('utf-8')
+                return obj.replace(': ', '=')
+
+            def taxtoyaml(data):
+                tags = data['tags']
+                return 'tags=' + ', '.join(tags) + '\n'
+
 
             tax_out = {}
             for taxonomy in i['taxanomies']:
@@ -348,13 +352,12 @@ def write_jekyll(data, target_format):
                         continue
                     tax_out[t_name].append(tvalue)
 
-            out.write('---\n')
             if len(yaml_header) > 0:
                 out.write(toyaml(yaml_header))
             if len(tax_out) > 0:
-                out.write(toyaml(tax_out))
+                out.write(taxtoyaml(tax_out))
 
-            out.write('---\n\n')
+            out.write('~~~~~~\n\n')
             try:
                 out.write(html2fmt(i['body'], target_format))
             except:
